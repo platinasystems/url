@@ -19,22 +19,31 @@ import (
 	"github.com/platinasystems/tftp"
 )
 
-func Open(path string) (io.ReadCloser, error) {
-	var (
-		u   *url.URL
-		r   *http.Response
-		err error
-	)
+func FilePathFromUrl(path string) (filepath string, u *url.URL, err error) {
 	u, err = url.Parse(path)
 
-	// It's not a URL its a file.
+	// It's not a URL - check if it is a file
 	if err != nil || (u.Scheme == "" && u.Host == "") {
-		return os.Open(path)
+		_, err := os.Stat(path)
+		if err == nil {
+			return path, nil, nil
+		}
+		return "", nil, err
 	}
-
 	// Handle file://... URLs
 	if u.Scheme == "file" {
-		return os.Open(u.Path)
+		return u.Path, nil, nil
+	}
+	return "", u, nil
+}
+
+func Open(path string) (i io.ReadCloser, err error) {
+	filepath, u, err := FilePathFromUrl(path)
+	if err != nil {
+		return nil, fmt.Errorf("url.Open failed: error in FilePathFromUrl(%s): %w")
+	}
+	if filepath != "" {
+		return os.Open(filepath)
 	}
 
 	// Handle tftp://... URLs
@@ -47,7 +56,7 @@ func Open(path string) (io.ReadCloser, error) {
 	}
 
 	// Get URL from server.
-	r, err = http.Get(u.String())
+	r, err := http.Get(u.String())
 	if err != nil {
 		return nil, err
 	}
