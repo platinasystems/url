@@ -45,7 +45,10 @@ func Open(path string) (i io.ReadCloser, err error) {
 	if filepath != "" {
 		return os.Open(filepath)
 	}
+	return OpenUrl(u)
+}
 
+func OpenUrl(u *url.URL) (i io.ReadCloser, err error) {
 	// Handle tftp://... URLs
 	if u.Scheme == "tftp" {
 		rc, err := tftp.GetFileRC(u.Host + ":" + u.Path)
