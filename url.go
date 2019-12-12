@@ -40,7 +40,9 @@ func FilePathFromUrl(path string) (filepath string, u *url.URL, err error) {
 func Open(path string) (i io.ReadCloser, err error) {
 	filepath, u, err := FilePathFromUrl(path)
 	if err != nil {
-		return nil, fmt.Errorf("url.Open failed: error in FilePathFromUrl(%s): %w")
+		return nil,
+			fmt.Errorf("url.Open failed: error in FilePathFromUrl(%s): %w",
+				path, err)
 	}
 	if filepath != "" {
 		return os.Open(filepath)
